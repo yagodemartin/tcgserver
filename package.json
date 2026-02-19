@@ -1,0 +1,15 @@
+{
+  "name": "tcgserver-backend",
+  "version": "0.1.0",
+  "description": "Pokémon TCG Companion - Cloudflare Worker Backend",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "wrangler build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^4.66.0"
+  }
+}

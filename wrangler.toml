@@ -1,0 +1,10 @@
+name = "tcgserver-backend"
+type = "javascript"
+compatibility_date = "2025-02-19"
+
+[env.production]
+name = "tcgserver-backend"
+route = "api.tcgserver.dev/*"
+
+[env.development]
+name = "tcgserver-backend-dev"
