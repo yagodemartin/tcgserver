@@ -90,6 +90,21 @@ function extractMainCard(decklist) {
 }
 
 /**
+ * Get Pokemon artwork URL from official Pokémon API
+ */
+function getPokemonImageUrl(iconName) {
+	// Icons come as "pokemon-name" or "pokemon-mega", convert to PokéAPI format
+	const cleanName = iconName
+		.toLowerCase()
+		.replace(/-/g, '_')
+		.replace(/mega|ex|v$/i, '')
+		.trim();
+
+	// PokéAPI official artwork
+	return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${cleanName}.png`;
+}
+
+/**
  * Get set color/brand - returns a color code for each Pokemon TCG set
  * Used for visual identification instead of images
  */
@@ -132,17 +147,28 @@ async function aggregateDecks(standingsArray) {
 					name: deckName,
 					count: 0,
 					mainCard: extractMainCard(standing.decklist),
+					deckId: standing.deck.id,
+					icons: standing.deck.icons || [],
 				};
 			}
 			deckMap[deckName].count++;
 		}
 	});
 
-	// Get set colors for visual identification
+	// Add URLs and images for visual identification
 	Object.values(deckMap).forEach(deck => {
 		if (deck.mainCard) {
 			deck.setColor = getSetColor(deck.mainCard.set);
 			deck.setCode = deck.mainCard.set;
+		}
+		// Limitless deck URL
+		deck.deckUrl = `https://play.limitlesstcg.com/deck/${deck.deckId}`;
+
+		// Get Pokémon images (up to 3)
+		if (deck.icons && deck.icons.length > 0) {
+			deck.pokemonImages = deck.icons.slice(0, 3).map(icon => getPokemonImageUrl(icon));
+			// Primary image is first Pokémon
+			deck.image = deck.pokemonImages[0];
 		}
 	});
 
@@ -707,11 +733,12 @@ function generateDemoHTML() {
 
 					const setColor = deck.setColor || '#808080';
 					card.innerHTML = \`
-						<div class="deck-image" style="background-color: \${setColor}; display: flex; align-items: center; justify-content: center;">
-							<span style="color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;">\${deck.setCode || 'Unknown'}</span>
+						<div class="deck-image" style="background-color: \${setColor}; display: flex; align-items: center; justify-content: center; position: relative;">
+							\${deck.image ? \`<img src="\${deck.image}" alt="\${deck.name}" style="height: 100%; width: auto; object-fit: contain;">\` : \`<span style="color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;">\${deck.setCode || 'Unknown'}</span>\`}
 						</div>
 						<div class="deck-name">\${deck.name}</div>
 						<div class="deck-count">\${deck.count} appearances</div>
+						<a href="\${deck.deckUrl}" target="_blank" style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: 600;">Ver Deck</a>
 					\`;
 
 					grid.appendChild(card);
@@ -789,11 +816,12 @@ function generateDemoHTML() {
 				const setColor = deck.setColor || '#808080';
 				let html = \`
 					<h2>\${deck.name}</h2>
-					<p style="color: #666; margin-bottom: 20px;">
+					<p style="color: #666; margin-bottom: 10px;">
 						\${deck.appearances} appearances in last \${days} days
 					</p>
-					<div style="width: 150px; height: 150px; background-color: \${setColor}; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">
-						<span style="color: white; font-size: 24px; font-weight: bold; text-transform: uppercase;">\${deck.setCode || 'Unknown'}</span>
+					<a href="\${deck.deckUrl}" target="_blank" style="display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">📋 Ver Deck Completo en Limitless</a>
+					<div style="width: 200px; height: 200px; background-color: \${setColor}; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">
+						\${deck.image ? \`<img src="\${deck.image}" alt="\${deck.name}" style="height: 100%; width: auto; object-fit: contain;">\` : \`<span style="color: white; font-size: 18px; font-weight: bold; text-transform: uppercase;">\${deck.setCode || 'Unknown'}</span>\`}
 					</div>
 				\`;
 
