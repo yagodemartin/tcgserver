@@ -90,6 +90,16 @@ function extractMainCard(decklist) {
 }
 
 /**
+ * Get card image URL using Limitless CDN (no API call needed)
+ * URL format: https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/[SET]/[SET]_[CARD_ID]_R_EN_[SIZE].png
+ */
+function getCardImageUrl(cardSet, cardNumber, size = 'SM') {
+	if (!cardSet || !cardNumber) return null;
+	const url = `https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/${cardSet}/${cardSet}_${cardNumber}_R_EN_${size}.png`;
+	return url;
+}
+
+/**
  * Get Pokemon artwork URL from official Pokémon API
  */
 function getPokemonImageUrl(iconName) {
@@ -130,6 +140,39 @@ function getSetColor(cardSet) {
 	};
 
 	return setColors[cardSet.toUpperCase()] || '#808080'; // Default gray
+}
+
+/**
+ * Enhance card list with images from Limitless CDN
+ */
+function enhanceCardListWithImages(decklist) {
+	if (!decklist) return decklist;
+
+	const enhanced = { ...decklist };
+
+	// Function to add images to cards
+	const addImagesToCards = (cards) => {
+		if (!Array.isArray(cards)) return cards;
+
+		return cards.map(card => {
+			// Use Limitless CDN for images - construct URL directly from card set and number
+			card.image = getCardImageUrl(card.set, card.number, 'SM');
+			return card;
+		});
+	};
+
+	// Add images to all card types
+	if (enhanced.pokemon) {
+		enhanced.pokemon = addImagesToCards(enhanced.pokemon);
+	}
+	if (enhanced.trainer) {
+		enhanced.trainer = addImagesToCards(enhanced.trainer);
+	}
+	if (enhanced.energy) {
+		enhanced.energy = addImagesToCards(enhanced.energy);
+	}
+
+	return enhanced;
 }
 
 /**
@@ -365,6 +408,12 @@ async function fetchDeckDetails(deckName, days = 7, format = 'standard') {
 		if (i < tournamentsToProcess.length - 1) {
 			await new Promise(resolve => setTimeout(resolve, 500));
 		}
+	}
+
+	// Enhance card list with images if we found one
+	if (deckInfo.cardList) {
+		console.log(`Adding card images for ${deckInfo.name}...`);
+		deckInfo.cardList = enhanceCardListWithImages(deckInfo.cardList);
 	}
 
 	return deckInfo.appearances > 0 ? deckInfo : null;
@@ -607,6 +656,24 @@ function generateDemoHTML() {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
+			gap: 15px;
+		}
+		.card-image-thumb {
+			width: 50px;
+			height: 70px;
+			border-radius: 4px;
+			background: white;
+			border: 1px solid #ddd;
+			flex-shrink: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			overflow: hidden;
+		}
+		.card-image-thumb img {
+			max-width: 100%;
+			max-height: 100%;
+			object-fit: contain;
 		}
 		.card-count {
 			background: #667eea;
@@ -859,8 +926,12 @@ function generateDemoHTML() {
 					if (cardList.pokemon && cardList.pokemon.length > 0) {
 						html += \`<div class="card-section"><h3>Pokemon (\${cardList.pokemon.length})</h3><div class="card-list">\`;
 						cardList.pokemon.forEach(card => {
+							const imageHtml = card.image
+								? \`<div class="card-image-thumb"><img src="\${card.image}" alt="\${card.name}" /></div>\`
+								: '';
 							html += \`
 								<div class="card-item">
+									\${imageHtml}
 									<span>\${card.name}</span>
 									<span class="card-count">\${card.count}x</span>
 								</div>
@@ -872,8 +943,12 @@ function generateDemoHTML() {
 					if (cardList.trainer && cardList.trainer.length > 0) {
 						html += \`<div class="card-section"><h3>Trainers (\${cardList.trainer.length})</h3><div class="card-list">\`;
 						cardList.trainer.forEach(card => {
+							const imageHtml = card.image
+								? \`<div class="card-image-thumb"><img src="\${card.image}" alt="\${card.name}" /></div>\`
+								: '';
 							html += \`
 								<div class="card-item">
+									\${imageHtml}
 									<span>\${card.name}</span>
 									<span class="card-count">\${card.count}x</span>
 								</div>
@@ -885,8 +960,12 @@ function generateDemoHTML() {
 					if (cardList.energy && cardList.energy.length > 0) {
 						html += \`<div class="card-section"><h3>Energy (\${cardList.energy.length})</h3><div class="card-list">\`;
 						cardList.energy.forEach(card => {
+							const imageHtml = card.image
+								? \`<div class="card-image-thumb"><img src="\${card.image}" alt="\${card.name}" /></div>\`
+								: '';
 							html += \`
 								<div class="card-item">
+									\${imageHtml}
 									<span>\${card.name}</span>
 									<span class="card-count">\${card.count}x</span>
 								</div>
