@@ -732,14 +732,19 @@ function generateDemoHTML() {
 					card.onclick = () => showDeckDetails(deck.name, days, format);
 
 					const setColor = deck.setColor || '#808080';
-					card.innerHTML = \`
-						<div class="deck-image" style="background-color: \${setColor}; display: flex; align-items: center; justify-content: center; position: relative;">
-							\${deck.image ? \`<img src="\${deck.image}" alt="\${deck.name}" style="height: 100%; width: auto; object-fit: contain;">\` : \`<span style="color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;">\${deck.setCode || 'Unknown'}</span>\`}
-						</div>
-						<div class="deck-name">\${deck.name}</div>
-						<div class="deck-count">\${deck.count} appearances</div>
-						<a href="\${deck.deckUrl}" target="_blank" style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: 600;">Ver Deck</a>
-					\`;
+					let imageHtml = '';
+					if (deck.image) {
+						imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;">';
+					} else {
+						imageHtml = '<span style="color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;">' + (deck.setCode || 'Unknown') + '</span>';
+					}
+
+					card.innerHTML = '<div class="deck-image" style="background-color: ' + setColor + '; display: flex; align-items: center; justify-content: center; position: relative;">' +
+						imageHtml +
+						'</div>' +
+						'<div class="deck-name">' + deck.name + '</div>' +
+						'<div class="deck-count">' + deck.count + ' appearances</div>' +
+						'<a href="' + deck.deckUrl + '" target="_blank" style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: 600;">Ver Deck</a>';
 
 					grid.appendChild(card);
 				});
@@ -814,16 +819,21 @@ function generateDemoHTML() {
 				const deck = data.deck;
 
 				const setColor = deck.setColor || '#808080';
-				let html = \`
-					<h2>\${deck.name}</h2>
-					<p style="color: #666; margin-bottom: 10px;">
-						\${deck.appearances} appearances in last \${days} days
-					</p>
-					<a href="\${deck.deckUrl}" target="_blank" style="display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">📋 Ver Deck Completo en Limitless</a>
-					<div style="width: 200px; height: 200px; background-color: \${setColor}; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">
-						\${deck.image ? \`<img src="\${deck.image}" alt="\${deck.name}" style="height: 100%; width: auto; object-fit: contain;">\` : \`<span style="color: white; font-size: 18px; font-weight: bold; text-transform: uppercase;">\${deck.setCode || 'Unknown'}</span>\`}
-					</div>
-				\`;
+				let imageHtml = '';
+				if (deck.image) {
+					imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;">';
+				} else {
+					imageHtml = '<span style="color: white; font-size: 18px; font-weight: bold; text-transform: uppercase;">' + (deck.setCode || 'Unknown') + '</span>';
+				}
+
+				let html = '<h2>' + deck.name + '</h2>' +
+					'<p style="color: #666; margin-bottom: 10px;">' +
+					deck.appearances + ' appearances in last ' + days + ' days' +
+					'</p>' +
+					'<a href="' + deck.deckUrl + '" target="_blank" style="display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">📋 Ver Deck Completo en Limitless</a>' +
+					'<div style="width: 200px; height: 200px; background-color: ' + setColor + '; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">' +
+					imageHtml +
+					'</div>';
 
 				if (deck.topPlacements && deck.topPlacements.length > 0) {
 					html += '<div class="card-section"><h3>Top Placements</h3><div class="card-list">';
