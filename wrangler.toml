@@ -1,10 +1,25 @@
 name = "tcgserver-backend"
-type = "javascript"
+main = "src/index.js"
 compatibility_date = "2025-02-19"
+
+# KV Namespace binding
+[[kv_namespaces]]
+binding = "KVDB"
+id = "dev-kvdb"
+preview_id = "dev-kvdb-preview"
 
 [env.production]
 name = "tcgserver-backend"
 route = "api.tcgserver.dev/*"
 
+[[env.production.kv_namespaces]]
+binding = "KVDB"
+id = "prod-kvdb"
+
 [env.development]
 name = "tcgserver-backend-dev"
+
+[[env.development.kv_namespaces]]
+binding = "KVDB"
+id = "dev-kvdb"
+preview_id = "dev-kvdb-preview"
