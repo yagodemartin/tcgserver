@@ -90,21 +90,31 @@ function extractMainCard(decklist) {
 }
 
 /**
- * Get set logo/image - shows the Pokemon TCG set symbol instead of card
+ * Get set color/brand - returns a color code for each Pokemon TCG set
+ * Used for visual identification instead of images
  */
-async function getSetImageUrl(cardSet) {
-	const cacheKey = `set:${cardSet}`;
+function getSetColor(cardSet) {
+	const setColors = {
+		// Current era
+		'TWM': '#8B4789', // Twilight Masquerade - Purple
+		'PRE': '#22B14C', // Primal Energy - Green
+		'OBF': '#FF8C00', // Obsidian Flames - Orange
+		'PAL': '#1E90FF', // Paldean Fates - Blue
+		'SVI': '#DC143C', // Scarlet & Violet - Red
+		'MEG': '#FFD700', // Magneton Meta - Gold
+		'TEF': '#20B2AA', // Temporal Forces - Teal
+		'ASC': '#9370DB', // Ancient Roar - Indigo
+		'DRI': '#FF6347', // Dragon Tera - Coral
+		'MEW': '#00CED1', // Mewtwo - Cyan
+		'PAF': '#FF69B4', // Paldean Future - Pink
+		'PFL': '#8B7355', // Paldean Fates - Brown
+		'SCR': '#4169E1', // Scarlet - Royal Blue
+		'SLV': '#C0C0C0', // Silver - Silver
+		'SHF': '#FF4500', // Shining Fates - Red-Orange
+		'SVP': '#DA70D6', // Sword/Shield Purple
+	};
 
-	if (imageCache.has(cacheKey)) {
-		return imageCache.get(cacheKey);
-	}
-
-	// Use Pokemon TCG set symbol images from Serebii CDN
-	// These are reliable official set logos
-	const setSymbolUrl = `https://www.serebii.net/card/symbol/${cardSet.toLowerCase()}.png`;
-
-	imageCache.set(cacheKey, setSymbolUrl);
-	return setSymbolUrl;
+	return setColors[cardSet.toUpperCase()] || '#808080'; // Default gray
 }
 
 /**
@@ -128,20 +138,15 @@ async function aggregateDecks(standingsArray) {
 		}
 	});
 
-	// Get set symbol images for each deck
-	const decks = await Promise.all(
-		Object.values(deckMap).map(async (deck) => {
-			if (deck.mainCard) {
-				try {
-					deck.image = await getSetImageUrl(deck.mainCard.set);
-				} catch (err) {
-					console.warn(`Failed to get set image for ${deck.name}:`, err.message);
-					deck.image = null;
-				}
-			}
-			return deck;
-		})
-	);
+	// Get set colors for visual identification
+	Object.values(deckMap).forEach(deck => {
+		if (deck.mainCard) {
+			deck.setColor = getSetColor(deck.mainCard.set);
+			deck.setCode = deck.mainCard.set;
+		}
+	});
+
+	const decks = Object.values(deckMap);
 
 	// Sort by count descending
 	return decks.sort((a, b) => b.count - a.count);
@@ -371,12 +376,8 @@ async function handleDeckDetails(request, env, ctx, deckName) {
 		}
 
 		if (deckInfo.mainCard) {
-			try {
-				deckInfo.image = await getSetImageUrl(deckInfo.mainCard.set);
-			} catch (err) {
-				console.warn(`Failed to get set image for ${deckInfo.name}:`, err.message);
-				deckInfo.image = null;
-			}
+			deckInfo.setColor = getSetColor(deckInfo.mainCard.set);
+			deckInfo.setCode = deckInfo.mainCard.set;
 		}
 
 		const response = {
@@ -704,8 +705,11 @@ function generateDemoHTML() {
 					card.className = 'deck-card';
 					card.onclick = () => showDeckDetails(deck.name, days, format);
 
+					const setColor = deck.setColor || '#808080';
 					card.innerHTML = \`
-						\${deck.image ? \`<img src="\${deck.image}" alt="\${deck.name}" class="deck-image" loading="lazy">\` : ''}
+						<div class="deck-image" style="background-color: \${setColor}; display: flex; align-items: center; justify-content: center;">
+							<span style="color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;">\${deck.setCode || 'Unknown'}</span>
+						</div>
 						<div class="deck-name">\${deck.name}</div>
 						<div class="deck-count">\${deck.count} appearances</div>
 					\`;
@@ -782,16 +786,16 @@ function generateDemoHTML() {
 				const data = await res.json();
 				const deck = data.deck;
 
+				const setColor = deck.setColor || '#808080';
 				let html = \`
 					<h2>\${deck.name}</h2>
 					<p style="color: #666; margin-bottom: 20px;">
 						\${deck.appearances} appearances in last \${days} days
 					</p>
+					<div style="width: 150px; height: 150px; background-color: \${setColor}; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">
+						<span style="color: white; font-size: 24px; font-weight: bold; text-transform: uppercase;">\${deck.setCode || 'Unknown'}</span>
+					</div>
 				\`;
-
-				if (deck.image) {
-					html += \`<img src="\${deck.image}" alt="\${deck.name}" style="max-width: 200px; margin-bottom: 20px; border-radius: 8px;">\`;
-				}
 
 				if (deck.topPlacements && deck.topPlacements.length > 0) {
 					html += '<div class="card-section"><h3>Top Placements</h3><div class="card-list">';
