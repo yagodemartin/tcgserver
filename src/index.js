@@ -90,21 +90,21 @@ function extractMainCard(decklist) {
 }
 
 /**
- * Get card image URL - use TCG-specific CDN that shows card fronts
+ * Get set logo/image - shows the Pokemon TCG set symbol instead of card
  */
-async function getCardImageUrl(cardName, cardSet, cardNumber) {
-	const cacheKey = `${cardSet}/${cardNumber}`;
+async function getSetImageUrl(cardSet) {
+	const cacheKey = `set:${cardSet}`;
 
 	if (imageCache.has(cacheKey)) {
 		return imageCache.get(cacheKey);
 	}
 
-	// Use Scryfall-like CDN for Pokemon TCG (has reliable front-facing images)
-	// Format: https://images.tcgplayer.com/fit/500x500/cards/{setCode}/{cardNumber}.jpg
-	const tcgPlayerUrl = `https://images.tcgplayer.com/fit/500x500/cards/${cardSet.toLowerCase()}/${cardNumber}.jpg`;
+	// Use Pokemon TCG set symbol images from Serebii CDN
+	// These are reliable official set logos
+	const setSymbolUrl = `https://www.serebii.net/card/symbol/${cardSet.toLowerCase()}.png`;
 
-	imageCache.set(cacheKey, tcgPlayerUrl);
-	return tcgPlayerUrl;
+	imageCache.set(cacheKey, setSymbolUrl);
+	return setSymbolUrl;
 }
 
 /**
@@ -128,18 +128,14 @@ async function aggregateDecks(standingsArray) {
 		}
 	});
 
-	// Get image URLs for each deck's main card
+	// Get set symbol images for each deck
 	const decks = await Promise.all(
 		Object.values(deckMap).map(async (deck) => {
 			if (deck.mainCard) {
 				try {
-					deck.image = await getCardImageUrl(
-						deck.mainCard.name,
-						deck.mainCard.set,
-						deck.mainCard.number
-					);
+					deck.image = await getSetImageUrl(deck.mainCard.set);
 				} catch (err) {
-					console.warn(`Failed to get image for ${deck.name}:`, err.message);
+					console.warn(`Failed to get set image for ${deck.name}:`, err.message);
 					deck.image = null;
 				}
 			}
@@ -376,13 +372,9 @@ async function handleDeckDetails(request, env, ctx, deckName) {
 
 		if (deckInfo.mainCard) {
 			try {
-				deckInfo.image = await getCardImageUrl(
-					deckInfo.mainCard.name,
-					deckInfo.mainCard.set,
-					deckInfo.mainCard.number
-				);
+				deckInfo.image = await getSetImageUrl(deckInfo.mainCard.set);
 			} catch (err) {
-				console.warn(`Failed to get image for ${deckInfo.name}:`, err.message);
+				console.warn(`Failed to get set image for ${deckInfo.name}:`, err.message);
 				deckInfo.image = null;
 			}
 		}
