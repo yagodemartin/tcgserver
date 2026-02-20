@@ -4,6 +4,10 @@
  */
 
 const LIMITLESS_API_BASE = 'https://play.limitlesstcg.com/api';
+const POKEMONTCG_API = 'https://api.pokemontcg.io/v2';
+
+// Cache for card images to avoid repeated lookups
+const imageCache = new Map();
 
 /**
  * Fetch tournaments from Limitless API
@@ -67,22 +71,110 @@ async function fetchStandings(tournamentId, retries = 3) {
 }
 
 /**
- * Aggregate decks from standings
+ * Extract main card from deck (prioritize "ex" cards, then first pokemon)
  */
-function aggregateDecks(standingsArray) {
-	const deckCount = {};
+function extractMainCard(decklist) {
+	if (!decklist || !decklist.pokemon || decklist.pokemon.length === 0) {
+		return null;
+	}
 
+	// First, try to find an "ex" card
+	const exCard = decklist.pokemon.find(card => card.name && card.name.includes('ex'));
+	if (exCard) {
+		return { name: exCard.name, set: exCard.set, number: exCard.number };
+	}
+
+	// Otherwise, return first pokemon
+	const firstCard = decklist.pokemon[0];
+	return { name: firstCard.name, set: firstCard.set, number: firstCard.number };
+}
+
+/**
+ * Get card image URL from Pokemon TCG API with timeout
+ */
+async function getCardImageUrl(cardName, cardSet, cardNumber) {
+	const cacheKey = `${cardSet}/${cardNumber}`;
+
+	// Check in-memory cache first
+	if (imageCache.has(cacheKey)) {
+		return imageCache.get(cacheKey);
+	}
+
+	try {
+		// Timeout after 2 seconds for image fetching
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+		const query = `q=name:"${cardName}" set.id:${cardSet}`;
+		const res = await fetch(`${POKEMONTCG_API}/cards?${query}`, {
+			signal: controller.signal,
+			cf: { cacheTtl: 3600 }
+		});
+
+		clearTimeout(timeoutId);
+
+		if (!res.ok) throw new Error(`Card API error: ${res.status}`);
+		const data = await res.json();
+
+		if (data.data && data.data[0]) {
+			const imageUrl = data.data[0].images?.small || data.data[0].images?.large;
+			if (imageUrl) {
+				imageCache.set(cacheKey, imageUrl);
+				return imageUrl;
+			}
+		}
+	} catch (err) {
+		console.warn(`getCardImageUrl timeout/error for ${cardName}:`, err.message);
+	}
+
+	// Fallback: construct URL based on set/number (always works)
+	const fallbackUrl = `https://images.pokemontcg.io/${cardSet}/${cardNumber}.png`;
+	imageCache.set(cacheKey, fallbackUrl);
+	return fallbackUrl;
+}
+
+/**
+ * Aggregate decks from standings with main card info
+ */
+async function aggregateDecks(standingsArray) {
+	const deckMap = {};
+
+	// Aggregate deck info
 	standingsArray.forEach(standing => {
 		if (standing.deck && standing.deck.name) {
 			const deckName = standing.deck.name;
-			deckCount[deckName] = (deckCount[deckName] || 0) + 1;
+			if (!deckMap[deckName]) {
+				deckMap[deckName] = {
+					name: deckName,
+					count: 0,
+					mainCard: extractMainCard(standing.decklist),
+				};
+			}
+			deckMap[deckName].count++;
 		}
 	});
 
+	// Get image URLs for each deck's main card
+	const decks = await Promise.all(
+		Object.values(deckMap).map(async (deck) => {
+			if (deck.mainCard) {
+				try {
+					deck.image = await getCardImageUrl(
+						deck.mainCard.name,
+						deck.mainCard.set,
+						deck.mainCard.number
+					);
+				} catch (err) {
+					console.warn(`Failed to get image for ${deck.name}:`, err.message);
+					deck.image = null;
+				}
+			}
+			return deck;
+		})
+	);
+
 	// Sort by count descending
-	return Object.entries(deckCount)
-		.map(([name, count]) => ({ name, count }))
-		.sort((a, b) => b.count - a.count);
+	return decks.sort((a, b) => b.count - a.count);
 }
 
 /**
@@ -140,8 +232,9 @@ async function handleMetaTop(request, env, ctx) {
 			}
 		}
 
-		// Aggregate and sort decks
-		const decks = aggregateDecks(allStandings).slice(0, limit);
+		// Aggregate and sort decks (now async to fetch images)
+		const allDecks = await aggregateDecks(allStandings);
+		const decks = allDecks.slice(0, limit);
 
 		const response = {
 			updated_at: new Date().toISOString(),
