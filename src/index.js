@@ -90,47 +90,21 @@ function extractMainCard(decklist) {
 }
 
 /**
- * Get card image URL from Pokemon TCG API with timeout
+ * Get card image URL - use TCG-specific CDN that shows card fronts
  */
 async function getCardImageUrl(cardName, cardSet, cardNumber) {
 	const cacheKey = `${cardSet}/${cardNumber}`;
 
-	// Check in-memory cache first
 	if (imageCache.has(cacheKey)) {
 		return imageCache.get(cacheKey);
 	}
 
-	try {
-		// Timeout after 2 seconds for image fetching
-		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), 2000);
+	// Use Scryfall-like CDN for Pokemon TCG (has reliable front-facing images)
+	// Format: https://images.tcgplayer.com/fit/500x500/cards/{setCode}/{cardNumber}.jpg
+	const tcgPlayerUrl = `https://images.tcgplayer.com/fit/500x500/cards/${cardSet.toLowerCase()}/${cardNumber}.jpg`;
 
-		const query = `q=name:"${cardName}" set.id:${cardSet}`;
-		const res = await fetch(`${POKEMONTCG_API}/cards?${query}`, {
-			signal: controller.signal,
-			cf: { cacheTtl: 3600 }
-		});
-
-		clearTimeout(timeoutId);
-
-		if (!res.ok) throw new Error(`Card API error: ${res.status}`);
-		const data = await res.json();
-
-		if (data.data && data.data[0]) {
-			const imageUrl = data.data[0].images?.small || data.data[0].images?.large;
-			if (imageUrl) {
-				imageCache.set(cacheKey, imageUrl);
-				return imageUrl;
-			}
-		}
-	} catch (err) {
-		console.warn(`getCardImageUrl timeout/error for ${cardName}:`, err.message);
-	}
-
-	// Fallback: construct URL based on set/number (always works)
-	const fallbackUrl = `https://images.pokemontcg.io/${cardSet}/${cardNumber}.png`;
-	imageCache.set(cacheKey, fallbackUrl);
-	return fallbackUrl;
+	imageCache.set(cacheKey, tcgPlayerUrl);
+	return tcgPlayerUrl;
 }
 
 /**
