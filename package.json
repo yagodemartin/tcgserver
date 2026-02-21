@@ -8,8 +8,8 @@
     "deploy": "wrangler deploy",
     "build": "wrangler build"
   },
-  "dependencies": {},
   "devDependencies": {
+    "miniflare": "^4.20260217.0",
     "wrangler": "^4.66.0"
   }
 }
