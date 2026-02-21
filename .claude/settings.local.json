@@ -20,7 +20,19 @@
       "Bash(git commit:*)",
       "Bash(C:UsersyagodDocumentsProyectosTCGServer.gitignore:*)",
       "Bash(C:UsersyagodDocumentsProyectosTCGServerREADME.md:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(for deck in \"Dragapult%20Dusknoir\" \"Regidrago%20Box\" \"Pikachu%20ex\" \"Raging%20Bolt\" \"Charizard%20ex\" \"Miraidon%20ex\" \"Lugia%20Archeops\" \"Pidgeot%20ex\" \"Roaring%20Moon\" \"Gardevoir%20ex\")",
+      "Bash(do echo \"=== Testing: $deck ===\")",
+      "Bash(done)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\yagod\\\\fix-ssh-perms.ps1\")",
+      "Bash(icacls:*)",
+      "Bash(cmd /c:*)",
+      "Bash(python:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\yagod\\\\start-ssh-manual.ps1\")",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\yagod\\\\install-ssh-task.ps1\")",
+      "Bash(netstat:*)",
+      "Bash(for deck in \"Dragapult%20Dusknoir\" \"N%27s%20Zoroark\" \"Gholdengo%20Lunatone\")",
+      "Bash(do echo -n \"$deck: \")"
     ]
   }
 }

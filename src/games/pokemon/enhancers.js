@@ -30,7 +30,9 @@ export function extractMainCard(decklist) {
  */
 export function getCardImageUrl(cardSet, cardNumber, size = 'SM') {
 	if (!cardSet || !cardNumber) return null;
-	return `${LIMITLESS_CDN_BASE}/${cardSet}/${cardSet}_${cardNumber}_R_EN_${size}.png`;
+	// Zero-pad card number to 3 digits (MEG_086 not MEG_86)
+	const paddedNumber = cardNumber.toString().padStart(3, '0');
+	return `${LIMITLESS_CDN_BASE}/${cardSet}/${cardSet}_${paddedNumber}_R_EN_${size}.png`;
 }
 
 /**
