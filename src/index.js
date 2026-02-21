@@ -100,18 +100,13 @@ function getCardImageUrl(cardSet, cardNumber, size = 'SM') {
 }
 
 /**
- * Get Pokemon artwork URL from official Pokémon API
+ * Get Pokemon artwork URL from PokemonTCG.io CDN
  */
 function getPokemonImageUrl(iconName) {
-	// Icons come as "pokemon-name" or "pokemon-mega", convert to PokéAPI format
-	const cleanName = iconName
-		.toLowerCase()
-		.replace(/-/g, '_')
-		.replace(/mega|ex|v$/i, '')
-		.trim();
-
-	// PokéAPI official artwork
-	return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${cleanName}.png`;
+	// Use PokemonTCG.io CDN which has reliable card artwork
+	// Format: https://images.pokemontcg.io/[setId]/[cardNumber]_hires.png
+	// For now, return null as we'll use card images instead
+	return null;
 }
 
 /**
@@ -156,7 +151,10 @@ function enhanceCardListWithImages(decklist) {
 
 		return cards.map(card => {
 			// Use Limitless CDN for images - construct URL directly from card set and number
-			card.image = getCardImageUrl(card.set, card.number, 'SM');
+			// Only add image if set and number are valid
+			if (card.set && card.number) {
+				card.image = getCardImageUrl(card.set, card.number, 'SM');
+			}
 			return card;
 		});
 	};
@@ -203,16 +201,11 @@ async function aggregateDecks(standingsArray) {
 		if (deck.mainCard) {
 			deck.setColor = getSetColor(deck.mainCard.set);
 			deck.setCode = deck.mainCard.set;
+			// Use main card image from Limitless CDN
+			deck.image = getCardImageUrl(deck.mainCard.set, deck.mainCard.number, 'LG');
 		}
 		// Limitless deck URL
 		deck.deckUrl = `https://play.limitlesstcg.com/deck/${deck.deckId}`;
-
-		// Get Pokémon images (up to 3)
-		if (deck.icons && deck.icons.length > 0) {
-			deck.pokemonImages = deck.icons.slice(0, 3).map(icon => getPokemonImageUrl(icon));
-			// Primary image is first Pokémon
-			deck.image = deck.pokemonImages[0];
-		}
 	});
 
 	const decks = Object.values(deckMap);
@@ -801,7 +794,7 @@ function generateDemoHTML() {
 					const setColor = deck.setColor || '#808080';
 					let imageHtml = '';
 					if (deck.image) {
-						imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;">';
+						imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<span style=&quot;color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;&quot;>' + (deck.setCode || 'Unknown') + '</span>\'">';
 					} else {
 						imageHtml = '<span style="color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;">' + (deck.setCode || 'Unknown') + '</span>';
 					}
@@ -888,7 +881,7 @@ function generateDemoHTML() {
 				const setColor = deck.setColor || '#808080';
 				let imageHtml = '';
 				if (deck.image) {
-					imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;">';
+					imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.parentElement.innerHTML=\'<span style=&quot;color: white; font-size: 18px; font-weight: bold; text-transform: uppercase;&quot;>' + (deck.setCode || 'Unknown') + '</span>\'">';
 				} else {
 					imageHtml = '<span style="color: white; font-size: 18px; font-weight: bold; text-transform: uppercase;">' + (deck.setCode || 'Unknown') + '</span>';
 				}
@@ -897,7 +890,7 @@ function generateDemoHTML() {
 					'<p style="color: #666; margin-bottom: 10px;">' +
 					deck.appearances + ' appearances in last ' + days + ' days' +
 					'</p>' +
-					'<a href="' + deck.deckUrl + '" target="_blank" style="display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">📋 Ver Deck Completo en Limitless</a>' +
+					'<a href="' + (deck.deckUrl || '#') + '" target="_blank" style="display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">📋 Ver Deck Completo en Limitless</a>' +
 					'<div style="width: 200px; height: 200px; background-color: ' + setColor + '; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">' +
 					imageHtml +
 					'</div>';
@@ -927,7 +920,7 @@ function generateDemoHTML() {
 						html += \`<div class="card-section"><h3>Pokemon (\${cardList.pokemon.length})</h3><div class="card-list">\`;
 						cardList.pokemon.forEach(card => {
 							const imageHtml = card.image
-								? \`<div class="card-image-thumb"><img src="\${card.image}" alt="\${card.name}" /></div>\`
+								? \`<div class="card-image-thumb"><img src="\${card.image}" alt="\${card.name}" onerror="this.style.display=\'none\'" /></div>\`
 								: '';
 							html += \`
 								<div class="card-item">
@@ -944,7 +937,7 @@ function generateDemoHTML() {
 						html += \`<div class="card-section"><h3>Trainers (\${cardList.trainer.length})</h3><div class="card-list">\`;
 						cardList.trainer.forEach(card => {
 							const imageHtml = card.image
-								? \`<div class="card-image-thumb"><img src="\${card.image}" alt="\${card.name}" /></div>\`
+								? \`<div class="card-image-thumb"><img src="\${card.image}" alt="\${card.name}" onerror="this.style.display=\'none\'" /></div>\`
 								: '';
 							html += \`
 								<div class="card-item">
@@ -961,7 +954,7 @@ function generateDemoHTML() {
 						html += \`<div class="card-section"><h3>Energy (\${cardList.energy.length})</h3><div class="card-list">\`;
 						cardList.energy.forEach(card => {
 							const imageHtml = card.image
-								? \`<div class="card-image-thumb"><img src="\${card.image}" alt="\${card.name}" /></div>\`
+								? \`<div class="card-image-thumb"><img src="\${card.image}" alt="\${card.name}" onerror="this.style.display=\'none\'" /></div>\`
 								: '';
 							html += \`
 								<div class="card-item">
