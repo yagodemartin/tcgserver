@@ -1,42 +1,86 @@
-# Firebase Setup Instructions
+# Firebase Setup Guide - Tournament Tracker Authentication
 
-## Overview
-Tournament Tracker features require Firebase for authentication and data storage.
+## Quick Start (Demo Mode) ✅ ALREADY WORKING
 
-## Setup Steps
+**You can see the Tournament Tracker UI RIGHT NOW without any Firebase setup!**
 
-### 1. Create Firebase Project
+### Access Demo Mode:
+```
+http://127.0.0.1:8787/?demo=true
+```
 
-1. Go to https://console.firebase.google.com/
-2. Click "Add project"
-3. Enter project name (e.g., "tcgserver-dev")
-4. Disable Google Analytics (optional for MVP)
-5. Click "Create project"
+**What you'll see:**
+- ✅ "My Tournaments" section visible immediately
+- ✅ 2 sample tournaments with matches
+- ✅ Color-coded matches:
+  - 🟢 Green = Win
+  - 🔴 Red = Loss
+  - 🟡 Yellow = Tie
+- ✅ Stats calculation (W-L-T, Win Rate)
+- ✅ All modals functional (Create Tournament, Add Match)
 
-### 2. Enable Authentication
+**Demo Mode Features:**
+- Show complete UI without authentication
+- Sample data to demonstrate functionality
+- All interactions work (modals open, forms visible)
+- No backend calls (uses mock data in browser)
 
-1. In Firebase Console → **Authentication** → Get started
-2. Click **Sign-in method** tab
-3. Enable **Google** provider
-4. Add authorized domain: `localhost` (for dev)
-5. Later add your production domain
+---
 
-### 3. Create Firestore Database
+## Full Production Setup (Firebase Auth + Firestore)
 
-1. In Firebase Console → **Firestore Database** → Create database
-2. Start in **production mode**
-3. Select region: `us-central1` (or closest to you)
-4. Click "Enable"
+To save real tournaments and matches that persist across sessions, follow these steps:
 
-### 4. Configure Security Rules
+### Phase 1: Create Firebase Project (5 minutes)
 
-Go to **Firestore** → **Rules** and paste:
+1. **Go to Firebase Console**
+   - Visit: https://console.firebase.google.com
+   - Click "Add project" or "Create a project"
+
+2. **Configure Project**
+   - Project name: `tcgserver-dev` (or your choice)
+   - Accept Firebase terms
+   - **Disable Google Analytics** (optional for MVP, you can enable later)
+   - Click "Create project"
+   - Wait ~30 seconds for setup to complete
+
+### Phase 2: Enable Google Authentication (3 minutes)
+
+1. **Navigate to Authentication**
+   - In Firebase Console sidebar → Click "Authentication"
+   - Click "Get started" button
+
+2. **Enable Google Sign-In**
+   - Click "Sign-in method" tab
+   - Find "Google" in the providers list
+   - Click "Google" → Toggle to "Enabled"
+   - Configure OAuth consent:
+     - **Project support email:** Your email address
+     - (Other fields are optional)
+   - Click "Save"
+
+### Phase 3: Create Firestore Database (5 minutes)
+
+1. **Navigate to Firestore**
+   - In Firebase Console sidebar → Click "Firestore Database"
+   - Click "Create database"
+
+2. **Configure Database**
+   - **Start mode:** Choose "Start in test mode" (we'll add security rules next)
+   - Click "Next"
+   - **Location:** Choose `us-central1` (or closest to your users)
+   - Click "Enable"
+   - Wait ~1 minute for database creation
+
+3. **Add Security Rules** (CRITICAL for data protection)
+   - Click "Rules" tab in Firestore
+   - Replace ALL existing rules with:
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User tournaments
+    // User tournaments - users can only access their own
     match /user_tournaments/{docId} {
       allow read, write: if request.auth != null
                          && request.auth.uid == resource.data.userId;
@@ -44,7 +88,7 @@ service cloud.firestore {
                     && request.auth.uid == request.resource.data.userId;
     }
 
-    // User matches
+    // User matches - users can only access their own
     match /user_matches/{docId} {
       allow read, write: if request.auth != null
                          && request.auth.uid == resource.data.userId;
@@ -55,113 +99,75 @@ service cloud.firestore {
 }
 ```
 
-Click **Publish**.
+   - Click "Publish"
 
-### 5. Get Firebase Credentials
+### Phase 4: Get Firebase Credentials (2 minutes)
 
-1. **Project ID**:
-   - Go to Project Settings (gear icon)
-   - Copy "Project ID"
+1. **Register Web App**
+   - In Firebase Console → Click gear icon ⚙️ (Project settings)
+   - Scroll down to "Your apps" section
+   - Click the Web icon `</>`
+   - **App nickname:** `TCG Companion Web`
+   - **Don't check** "Also set up Firebase Hosting"
+   - Click "Register app"
 
-2. **API Key**:
-   - Project Settings → General tab
-   - Under "Your apps" → Web app
-   - If no app exists, click "Add app" → Web
-   - Copy "API Key" (Web API Key)
+2. **Copy Configuration**
+   - Copy the firebaseConfig object values
 
-### 6. Configure Cloudflare Worker
+### Phase 5: Update Frontend Code (2 minutes)
 
-Set secrets using Wrangler CLI:
+Edit `src/ui/demo.html.js` around line 728:
 
-```bash
-npx wrangler secret put FIREBASE_PROJECT_ID
-# Paste your project ID
+Replace placeholder values with your actual Firebase config.
 
-npx wrangler secret put FIREBASE_API_KEY
-# Paste your API key
+### Phase 6: Configure Backend (3 minutes)
+
+Edit `wrangler.toml` and add:
+
+```toml
+[vars]
+FIREBASE_PROJECT_ID = "your-project-id"
+FIREBASE_API_KEY = "your-api-key"
 ```
 
-### 7. Test Authentication
+### Phase 7: Test
 
-Once configured, test the endpoints:
+1. Restart server: `npm run dev`
+2. Open: `http://127.0.0.1:8787`
+3. Click "Sign in with Google"
+4. Create a tournament
+5. Add a match
+6. Verify data persists after reload
 
-```bash
-# Without auth (should return 401)
-curl http://localhost:8787/v1/user/tournaments
+---
 
-# With valid token (get from Firebase Auth)
-curl -H "Authorization: Bearer <FIREBASE_ID_TOKEN>" \
-  http://localhost:8787/v1/user/tournaments
-```
+## Demo Mode vs Production Mode
 
-## Firebase Web Config (for Frontend)
+**Demo Mode** (`?demo=true`):
+- ✅ Works immediately (no setup)
+- ✅ Shows complete UI
+- ❌ Data doesn't persist (browser only)
+- ❌ No authentication
 
-Add to your HTML `<head>`:
+**Production Mode** (after Firebase setup):
+- ✅ Real authentication
+- ✅ Data persists in Firestore
+- ✅ Secure (user isolation)
+- ✅ Accessible from any device
 
-```html
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-  import { getAuth, signInWithPopup, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+---
 
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-  };
+## Cost: $0 (Free Tier)
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+Firebase Spark Plan includes:
+- 50,000 reads/day
+- 20,000 writes/day
+- Unlimited auth users
 
-  window.signInWithGoogle = async function() {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
-      localStorage.setItem('idToken', idToken);
-      console.log('Logged in:', result.user.displayName);
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
-  };
-</script>
-```
+Estimated MVP usage: ~1,000 operations/day ✅
 
-## Free Tier Limits
+---
 
-Firebase Spark (free) plan includes:
-- **Authentication**: Unlimited users
-- **Firestore**:
-  - 1GB storage
-  - 50K reads/day
-  - 20K writes/day
-  - 20K deletes/day
-
-Sufficient for ~100 active users in MVP.
-
-## Production Deployment
-
-When deploying to production:
-
-1. Add production domain to Firebase Auth authorized domains
-2. Update Firestore indexes if queries are slow
-3. Set secrets in production environment:
-   ```bash
-   npx wrangler secret put FIREBASE_PROJECT_ID --env production
-   npx wrangler secret put FIREBASE_API_KEY --env production
-   ```
-
-## Troubleshooting
-
-**"Firebase not configured" error:**
-- Verify secrets are set: `npx wrangler secret list`
-- Check wrangler.toml has correct binding names
-
-**401 Unauthorized:**
-- Verify Firebase ID token is valid and not expired
-- Check Firestore security rules allow the operation
-- Ensure userId matches between token and document
-
-**Firestore permission denied:**
-- Review security rules
-- Verify auth token contains correct `uid`
-- Check document has correct `userId` field
+**Current Status:**
+- ✅ Demo mode working NOW
+- ⏳ Firebase setup: 20-30 minutes
