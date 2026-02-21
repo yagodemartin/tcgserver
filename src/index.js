@@ -794,7 +794,7 @@ function generateDemoHTML() {
 					const setColor = deck.setColor || '#808080';
 					let imageHtml = '';
 					if (deck.image) {
-						imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<span style=&quot;color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;&quot;>' + (deck.setCode || 'Unknown') + '</span>\'">';
+						imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.style.display=\'none\'">';
 					} else {
 						imageHtml = '<span style="color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;">' + (deck.setCode || 'Unknown') + '</span>';
 					}
@@ -881,7 +881,7 @@ function generateDemoHTML() {
 				const setColor = deck.setColor || '#808080';
 				let imageHtml = '';
 				if (deck.image) {
-					imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.parentElement.innerHTML=\'<span style=&quot;color: white; font-size: 18px; font-weight: bold; text-transform: uppercase;&quot;>' + (deck.setCode || 'Unknown') + '</span>\'">';
+					imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.style.display=\'none\'">';
 				} else {
 					imageHtml = '<span style="color: white; font-size: 18px; font-weight: bold; text-transform: uppercase;">' + (deck.setCode || 'Unknown') + '</span>';
 				}
