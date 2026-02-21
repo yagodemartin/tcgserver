@@ -17,7 +17,10 @@
       "Read:*",
       "Glob:*",
       "Grep:*",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(C:UsersyagodDocumentsProyectosTCGServer.gitignore:*)",
+      "Bash(C:UsersyagodDocumentsProyectosTCGServerREADME.md:*)",
+      "Bash(powershell -Command:*)"
     ]
   }
 }
