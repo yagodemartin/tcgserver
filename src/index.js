@@ -744,6 +744,7 @@ function generateDemoHTML() {
 
 	<script>
 		async function loadData() {
+			console.log('loadData() started');
 			const days = document.getElementById('days').value;
 			const format = document.getElementById('format').value;
 			const limit = document.getElementById('limit').value;
@@ -753,11 +754,14 @@ function generateDemoHTML() {
 			document.getElementById('errorContainer').innerHTML = '';
 
 			try {
+				console.log('Starting parallel loads...');
 				await Promise.all([
 					loadMetaDecks(days, format, limit),
 					loadTournaments(days, format)
 				]);
+				console.log('Data loaded successfully');
 			} catch (error) {
+				console.error('Error loading data:', error);
 				showError('Failed to load data: ' + error.message);
 			} finally {
 				refreshBtn.disabled = false;
@@ -765,28 +769,34 @@ function generateDemoHTML() {
 		}
 
 		async function loadMetaDecks(days, format, limit) {
+			console.log('loadMetaDecks() started');
 			const container = document.getElementById('metaDecks');
 			container.innerHTML = '<div class="loading">Loading meta decks...</div>';
 
 			try {
+				console.log('Fetching /v1/meta/top...');
 				const res = await fetch(\`/v1/meta/top?days=\${days}&format=\${format}&limit=\${limit}\`);
 				if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
 
+				console.log('Response received, parsing JSON...');
 				const cacheStatus = res.headers.get('X-Cache');
 				updateCacheBadge('metaCacheBadge', cacheStatus);
 
 				const data = await res.json();
+				console.log('JSON parsed, decks:', data.decks.length);
 
 				if (data.decks.length === 0) {
 					container.innerHTML = '<p class="loading">No decks found for this period.</p>';
 					return;
 				}
 
+				console.log('Creating grid with', data.decks.length, 'decks');
 				container.innerHTML = '';
 				const grid = document.createElement('div');
 				grid.className = 'deck-grid';
 
-				data.decks.forEach(deck => {
+				data.decks.forEach((deck, index) => {
+					console.log('Creating card for deck', index + 1, ':', deck.name);
 					const card = document.createElement('div');
 					card.className = 'deck-card';
 					card.onclick = () => showDeckDetails(deck.name, days, format);
@@ -814,35 +824,44 @@ function generateDemoHTML() {
 					grid.appendChild(card);
 				});
 
+				console.log('Appending grid to container...');
 				container.appendChild(grid);
+				console.log('loadMetaDecks() completed');
 			} catch (error) {
+				console.error('loadMetaDecks error:', error);
 				container.innerHTML = \`<div class="error">Failed to load meta decks: \${error.message}</div>\`;
 			}
 		}
 
 		async function loadTournaments(days, format) {
+			console.log('loadTournaments() started');
 			const container = document.getElementById('tournaments');
 			container.innerHTML = '<div class="loading">Loading tournaments...</div>';
 
 			try {
+				console.log('Fetching /v1/tournaments/recent...');
 				const res = await fetch(\`/v1/tournaments/recent?days=\${days}&format=\${format}&limit=50\`);
 				if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
 
+				console.log('Response received, parsing JSON...');
 				const cacheStatus = res.headers.get('X-Cache');
 				updateCacheBadge('tournamentCacheBadge', cacheStatus);
 
 				const data = await res.json();
+				console.log('JSON parsed, tournaments:', data.count);
 
 				if (data.tournaments.length === 0) {
 					container.innerHTML = '<p class="loading">No tournaments found for this period.</p>';
 					return;
 				}
 
+				console.log('Creating tournament list...');
 				container.innerHTML = '';
 				const list = document.createElement('div');
 				list.className = 'tournament-list';
 
-				data.tournaments.slice(0, 10).forEach(tournament => {
+				data.tournaments.slice(0, 10).forEach((tournament, index) => {
+					console.log('Adding tournament', index + 1);
 					const item = document.createElement('div');
 					item.className = 'tournament-item';
 
@@ -858,8 +877,11 @@ function generateDemoHTML() {
 					list.appendChild(item);
 				});
 
+				console.log('Appending tournament list to container...');
 				container.appendChild(list);
+				console.log('loadTournaments() completed');
 			} catch (error) {
+				console.error('loadTournaments error:', error);
 				container.innerHTML = \`<div class="error">Failed to load tournaments: \${error.message}</div>\`;
 			}
 		}
