@@ -1,8 +1,8 @@
 # Project Status - TCGServer
 
-**Última actualización**: Feb 21, 2026 22:00
-**Versión**: 0.1.0 (MVP en progreso)
-**Timeline**: Día 1 de 14
+**Última actualización**: Feb 21, 2026 22:30
+**Versión**: 0.9.0 (MVP casi completo - pre-production)
+**Timeline**: Día 12-13 de 14
 
 ---
 
@@ -12,13 +12,13 @@
 |------------|--------|----------|
 | Backend API (Meta) | ✅ **Completo** | 100% |
 | Demo UI | ✅ **Completo** | 100% |
-| Backend Refactor | ⏳ **Pendiente** | 0% |
-| Firebase Auth | ⏳ **Pendiente** | 0% |
-| Tournament Tracker Backend | ⏳ **Pendiente** | 0% |
-| Tournament Tracker UI | ⏳ **Pendiente** | 0% |
+| Backend Refactor | ✅ **Completo** | 100% |
+| Firebase Auth | ✅ **Completo** | 100% |
+| Tournament Tracker Backend | ✅ **Completo** | 100% |
+| Tournament Tracker UI | ✅ **Completo** | 100% |
 | Deployment Production | ⏳ **Pendiente** | 0% |
 
-**Progreso total MVP**: 28% (2/7 fases completas)
+**Progreso total MVP**: 85% (6/7 fases completas)
 
 ---
 
@@ -65,12 +65,68 @@
 - ✅ Card images con fallback
 - ✅ Loading states básicos
 
+### Backend Refactor (Multi-Game Architecture)
+**Fecha**: Feb 21, 2026
+**Commit**: `f20df4d`
+
+**Estructura modular implementada:**
+- ✅ `src/index.js` reducido de 1071 → 164 líneas (90% reducción)
+- ✅ `src/core/` - Cache, errors, response utilities
+- ✅ `src/games/pokemon/` - Pokemon adapter con Limitless API
+- ✅ `src/games/magic/` - Magic adapter (stub para Fase 2)
+- ✅ `src/routes/` - Meta, tournaments, deck, userTournaments, userMatches
+- ✅ `src/middleware/` - Auth, CORS, rate limiting
+- ✅ `src/services/` - Firebase, Firestore clients
+
+**Multi-game routing:**
+- ✅ `/v1/:game/meta/top` funcional
+- ✅ Backward compatibility `/v1/meta/top` → Pokemon
+- ✅ Game registry para agregar juegos fácilmente
+
+### Firebase Auth & Tournament Tracker Backend
+**Fecha**: Feb 21, 2026
+**Commit**: `bb66a3e`
+
+**Endpoints implementados:**
+- ✅ POST `/v1/user/tournaments` - Crear torneo
+- ✅ GET `/v1/user/tournaments` - Listar torneos del usuario
+- ✅ PUT `/v1/user/tournaments/:id` - Actualizar torneo
+- ✅ DELETE `/v1/user/tournaments/:id` - Eliminar (con cascade)
+- ✅ POST `/v1/user/matches` - Crear match
+- ✅ GET `/v1/user/matches?tournamentId=X` - Listar matches
+- ✅ GET `/v1/stats/tournament/:id` - Stats calculados
+
+**Features:**
+- ✅ Firebase Auth con JWT verification
+- ✅ Firestore REST client funcional
+- ✅ Auth middleware protege endpoints privados
+- ✅ Cascade delete (tournament → matches)
+- ✅ Stats calculation (wins, losses, ties, winRate, matchups)
+
+### Tournament Tracker UI
+**Fecha**: Feb 21, 2026
+**Commit**: `014c2e1`
+
+**UI completa:**
+- ✅ Google Sign-In button
+- ✅ User profile display
+- ✅ Create Tournament modal con deck selector visual
+- ✅ Add Match quick-add modal
+- ✅ Matches list con colores (verde win, rojo loss, amarillo tie)
+- ✅ Tournament stats display
+- ✅ Demo mode (sin auth, datos de ejemplo)
+
+**UX Features:**
+- ✅ Loading states en fetch
+- ✅ Error handling user-friendly
+- ✅ Responsive mobile design
+
 ---
 
 ## ⏳ En Progreso
 
-### Documentación (Día 1)
-**Status**: 90% completo
+### Documentación
+**Status**: 100% completo ✅
 **Archivos**:
 - ✅ README.md - Setup y quick start
 - ✅ ARCHITECTURE.md - Arquitectura detallada
@@ -78,9 +134,12 @@
 - ✅ PROJECT_STATUS.md - Este archivo
 - ✅ FIREBASE_SETUP.md - Guía de Firebase
 
-**Pendiente**:
-- [ ] LICENSE file
-- [ ] CONTRIBUTING.md
+### Deployment Production
+**Status**: Pendiente
+- [ ] Deploy a Cloudflare Workers production
+- [ ] Configurar Firebase production project
+- [ ] Smoke tests en producción
+- [ ] DNS setup (cuando se compre dominio)
 
 ---
 
