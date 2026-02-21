@@ -1,9 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git checkout:*)",
-      "Bash(wrangler login:*)",
-      "Bash(wrangler init:*)"
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(curl *)",
+      "Bash(sleep *)",
+      "Bash(tail *)",
+      "Bash(grep *)",
+      "Bash(pkill *)",
+      "Bash(wrangler *)",
+      "WebSearch",
+      "Edit:*",
+      "Write:*",
+      "Read:*",
+      "Glob:*",
+      "Grep:*",
+      "Bash(git commit:*)"
     ]
   }
 }

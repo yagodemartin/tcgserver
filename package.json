@@ -11,5 +11,8 @@
   "devDependencies": {
     "miniflare": "^4.20260217.0",
     "wrangler": "^4.66.0"
+  },
+  "dependencies": {
+    "firebase-auth-cloudflare-workers": "^2.0.6"
   }
 }

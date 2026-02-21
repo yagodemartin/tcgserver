@@ -11,6 +11,18 @@ import { handleMetaTop } from './routes/meta.js';
 import { handleTournamentsRecent } from './routes/tournaments.js';
 import { handleDeckDetails } from './routes/deck.js';
 import { handleDemo } from './routes/demo.js';
+import {
+	handleCreateUserTournament,
+	handleListUserTournaments,
+	handleUpdateUserTournament,
+	handleDeleteUserTournament,
+} from './routes/userTournaments.js';
+import {
+	handleCreateUserMatch,
+	handleListUserMatches,
+	handleUpdateUserMatch,
+	handleDeleteUserMatch,
+} from './routes/userMatches.js';
 
 import { handleCorsOptions } from './middleware/cors.js';
 import { checkRateLimit } from './middleware/rateLimit.js';
@@ -98,6 +110,52 @@ export default {
 		if (legacyDeckMatch && method === 'GET') {
 			const deckName = legacyDeckMatch[1];
 			return await handleDeckDetails(request, env, ctx, 'pokemon', deckName);
+		}
+
+		// User Tournaments endpoints (protected)
+		if (url.pathname === '/v1/user/tournaments') {
+			if (method === 'POST') {
+				return await handleCreateUserTournament(request, env, ctx);
+			}
+			if (method === 'GET') {
+				return await handleListUserTournaments(request, env, ctx);
+			}
+			return methodNotAllowedResponse(['GET', 'POST']);
+		}
+
+		const tournamentIdMatch = url.pathname.match(/^\/v1\/user\/tournaments\/([^/]+)$/);
+		if (tournamentIdMatch) {
+			const tournamentId = tournamentIdMatch[1];
+			if (method === 'PUT') {
+				return await handleUpdateUserTournament(request, env, ctx, tournamentId);
+			}
+			if (method === 'DELETE') {
+				return await handleDeleteUserTournament(request, env, ctx, tournamentId);
+			}
+			return methodNotAllowedResponse(['PUT', 'DELETE']);
+		}
+
+		// User Matches endpoints (protected)
+		if (url.pathname === '/v1/user/matches') {
+			if (method === 'POST') {
+				return await handleCreateUserMatch(request, env, ctx);
+			}
+			if (method === 'GET') {
+				return await handleListUserMatches(request, env, ctx);
+			}
+			return methodNotAllowedResponse(['GET', 'POST']);
+		}
+
+		const matchIdMatch = url.pathname.match(/^\/v1\/user\/matches\/([^/]+)$/);
+		if (matchIdMatch) {
+			const matchId = matchIdMatch[1];
+			if (method === 'PUT') {
+				return await handleUpdateUserMatch(request, env, ctx, matchId);
+			}
+			if (method === 'DELETE') {
+				return await handleDeleteUserMatch(request, env, ctx, matchId);
+			}
+			return methodNotAllowedResponse(['PUT', 'DELETE']);
 		}
 
 		// Not found

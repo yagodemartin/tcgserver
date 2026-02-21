@@ -8,6 +8,11 @@ binding = "KVDB"
 id = "dev-kvdb"
 preview_id = "dev-kvdb-preview"
 
+# Firebase configuration (set via secrets: npx wrangler secret put <KEY>)
+# Required for Tournament Tracker features
+# FIREBASE_PROJECT_ID = "your-project-id"
+# FIREBASE_API_KEY = "your-api-key"
+
 [env.production]
 name = "tcgserver-backend"
 route = "api.tcgserver.dev/*"

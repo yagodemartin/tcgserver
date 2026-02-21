@@ -1,9 +1,25 @@
 /**
  * Firebase Auth middleware for Cloudflare Workers
- * Note: Firebase integration will be implemented in Phase 2
  */
 
+import { Auth } from 'firebase-auth-cloudflare-workers';
 import { unauthorizedResponse } from '../core/errors.js';
+
+/**
+ * Initialize Firebase Auth
+ * @param {object} env - Worker environment with Firebase config
+ * @returns {Auth} Firebase Auth instance
+ */
+function getFirebaseAuth(env) {
+	if (!env.FIREBASE_PROJECT_ID) {
+		throw new Error('FIREBASE_PROJECT_ID not configured');
+	}
+
+	return Auth.getOrInitialize(
+		env.FIREBASE_PROJECT_ID,
+		env.FIREBASE_KEYS || env.KVDB // Use dedicated KV for keys or fallback to main KV
+	);
+}
 
 /**
  * Verify Firebase ID token
@@ -12,12 +28,14 @@ import { unauthorizedResponse } from '../core/errors.js';
  * @returns {Promise<object|null>} Decoded token or null if invalid
  */
 export async function verifyIdToken(idToken, env) {
-	// TODO: Phase 2 - Implement Firebase Auth verification
-	// Use firebase-auth-cloudflare-workers package
-	// Verify JWT signature using Google public keys (cached in KV)
-	// Return decoded token with { uid, email, ... }
-
-	throw new Error('Firebase Auth not yet implemented - Phase 2');
+	try {
+		const auth = getFirebaseAuth(env);
+		const decodedToken = await auth.verifyIdToken(idToken);
+		return decodedToken;
+	} catch (err) {
+		console.error('Token verification error:', err);
+		return null;
+	}
 }
 
 /**
@@ -51,6 +69,8 @@ export async function requireAuth(request, env) {
 			user: {
 				userId: decodedToken.uid,
 				email: decodedToken.email,
+				name: decodedToken.name,
+				picture: decodedToken.picture,
 			},
 		};
 	} catch (err) {
