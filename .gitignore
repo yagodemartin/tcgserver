@@ -10,7 +10,8 @@ node_modules/
 
 # Temp files
 *.bat
-server.js
+# server.js - Now tracked (useful for Windows dev workaround)
+# validate-images.js - Now tracked (useful validation script)
 
 # Build
 dist/
