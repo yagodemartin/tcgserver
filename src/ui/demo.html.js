@@ -817,6 +817,172 @@ export function generateDemoHTML() {
 		let myTournaments = [];
 		let currentTournamentMatches = {};
 
+		// Demo mode check
+		const isDemoMode = window.location.search.includes('demo=true');
+
+		if (isDemoMode) {
+			console.log('🎭 Demo mode enabled - showing Tournament Tracker without auth');
+
+			// Initialize demo mode after DOM loads
+			window.addEventListener('DOMContentLoaded', () => {
+				initDemoMode();
+			});
+		}
+
+		// Initialize demo mode
+		function initDemoMode() {
+			const myTournamentsSection = document.getElementById('myTournamentsSection');
+			if (!myTournamentsSection) {
+				console.error('myTournamentsSection element not found');
+				return;
+			}
+
+			// Show tournament section immediately
+			myTournamentsSection.style.display = 'block';
+
+			// Create demo tournaments
+			myTournaments = [
+				{
+					id: 'demo-tournament-1',
+					name: 'Demo Regional Championship',
+					date: '2026-02-20T10:00:00Z',
+					format: 'standard',
+					location: 'Demo City',
+					game: 'pokemon',
+					deckName: 'Charizard ex',
+					deckImageUrl: 'https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/OBF/OBF_125_R_EN_LG.png'
+				},
+				{
+					id: 'demo-tournament-2',
+					name: 'League Cup Demo',
+					date: '2026-02-15T14:00:00Z',
+					format: 'standard',
+					game: 'pokemon',
+					location: 'Local Game Store',
+					deckName: 'Gardevoir ex',
+					deckImageUrl: 'https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/SVI/SVI_086_R_EN_LG.png'
+				}
+			];
+
+			// Create demo matches with stats
+			currentTournamentMatches['demo-tournament-1'] = {
+				matches: [
+					{
+						id: 'demo-match-1',
+						round: 1,
+						opponent: 'John Doe',
+						opponentDeck: 'Lugia VSTAR',
+						opponentDeckImageUrl: 'https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/SVI/SVI_234_R_EN_LG.png',
+						result: 'win',
+						myScore: 2,
+						opponentScore: 1
+					},
+					{
+						id: 'demo-match-2',
+						round: 2,
+						opponent: 'Jane Smith',
+						opponentDeck: 'Pidgeot ex Control',
+						opponentDeckImageUrl: 'https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/OBF/OBF_164_R_EN_LG.png',
+						result: 'loss',
+						myScore: 0,
+						opponentScore: 2
+					},
+					{
+						id: 'demo-match-3',
+						round: 3,
+						opponent: 'Bob Johnson',
+						opponentDeck: 'Dragapult ex',
+						opponentDeckImageUrl: 'https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/TWM/TWM_130_R_EN_LG.png',
+						result: 'tie',
+						myScore: 1,
+						opponentScore: 1
+					}
+				],
+				stats: {
+					wins: 1,
+					losses: 1,
+					ties: 1,
+					totalGames: 3,
+					winRate: 33.33
+				}
+			};
+
+			currentTournamentMatches['demo-tournament-2'] = {
+				matches: [
+					{
+						id: 'demo-match-4',
+						round: 1,
+						opponent: 'Alice Williams',
+						opponentDeck: 'Gholdengo ex',
+						opponentDeckImageUrl: 'https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/PAL/PAL_139_R_EN_LG.png',
+						result: 'win',
+						myScore: 2,
+						opponentScore: 0
+					},
+					{
+						id: 'demo-match-5',
+						round: 2,
+						opponent: 'Charlie Brown',
+						opponentDeck: 'Miraidon ex',
+						result: 'win',
+						myScore: 2,
+						opponentScore: 1
+					}
+				],
+				stats: {
+					wins: 2,
+					losses: 0,
+					ties: 0,
+					totalGames: 2,
+					winRate: 100.0
+				}
+			};
+
+			// Render tournaments
+			const container = document.getElementById('myTournamentsList');
+			if (!container) {
+				console.error('myTournamentsList element not found');
+				return;
+			}
+
+			container.innerHTML = '';
+
+			// Add demo banner
+			const banner = document.createElement('div');
+			banner.style.cssText = 'background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107; border: 1px solid #ffc107;';
+
+			const bannerContent = document.createElement('div');
+			bannerContent.style.cssText = 'display: flex; align-items: center; gap: 10px;';
+
+			const icon = document.createElement('span');
+			icon.style.fontSize = '24px';
+			icon.textContent = '🎭';
+
+			const textContainer = document.createElement('div');
+
+			const title = document.createElement('strong');
+			title.style.cssText = 'display: block; margin-bottom: 4px;';
+			title.textContent = 'Demo Mode Active';
+
+			const subtitle = document.createElement('span');
+			subtitle.style.cssText = 'font-size: 13px; color: #856404;';
+			subtitle.textContent = 'Showing sample data. Configure Firebase to save real tournaments.';
+
+			textContainer.appendChild(title);
+			textContainer.appendChild(subtitle);
+			bannerContent.appendChild(icon);
+			bannerContent.appendChild(textContainer);
+			banner.appendChild(bannerContent);
+			container.appendChild(banner);
+
+			// Render tournament cards
+			myTournaments.forEach(tournament => {
+				container.appendChild(renderTournamentCard(tournament));
+			});
+
+			console.log('✅ Demo mode initialized with', myTournaments.length, 'tournaments');
+		}
+
 		// Load initial data
 		loadData();
 
