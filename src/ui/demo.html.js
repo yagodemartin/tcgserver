@@ -708,6 +708,16 @@ export function generateDemoHTML() {
 		</div>
 	</div>
 
+	<!-- Deck Details Modal -->
+	<div id="deckDetailsModal" class="modal">
+		<div class="modal-content" style="max-width: 900px;">
+			<button class="close-modal" onclick="closeDeckDetailsModal()">&times;</button>
+			<div id="deckDetailsContent">
+				<div class="loading">Loading deck details...</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- Firebase SDK (ESM imports) -->
 	<script type="module">
 		import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
@@ -886,6 +896,10 @@ export function generateDemoHTML() {
 						<div class="deck-name">\${deckName}</div>
 						<div class="deck-count">\${deckCount} appearances</div>
 					\`;
+
+					// Add click handler to show deck details
+					card.style.cursor = 'pointer';
+					card.onclick = () => showDeckDetails(deckName);
 
 					grid.appendChild(card);
 				});
@@ -1282,6 +1296,81 @@ export function generateDemoHTML() {
 			});
 			event.currentTarget.classList.add('selected');
 		}
+
+		// Show deck details modal
+		async function showDeckDetails(deckName) {
+			const modal = document.getElementById('deckDetailsModal');
+			const content = document.getElementById('deckDetailsContent');
+
+			modal.classList.add('active');
+			content.innerHTML = '<div class="loading">Loading deck details...</div>';
+
+			try {
+				const game = document.getElementById('game').value;
+				const days = document.getElementById('days').value;
+				const format = document.getElementById('format').value;
+
+				const res = await fetch(\`/v1/\${game}/meta/deck/\${encodeURIComponent(deckName)}?days=\${days}&format=\${format}\`);
+
+				if (!res.ok) {
+					throw new Error(\`HTTP \${res.status}\`);
+				}
+
+				const data = await res.json();
+				const deck = data.deck;
+
+				let html = \`<h3>\${deck.name}</h3>\`;
+				html += \`<p style="color: #666; margin-bottom: 20px;">\${deck.appearances} appearances in last \${days} days</p>\`;
+
+				// Main card
+				if (deck.mainCard && deck.image) {
+					html += \`
+						<div style="text-align: center; margin-bottom: 30px;">
+							<img src="\${deck.image}" alt="\${deck.mainCard.name}" style="max-height: 300px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+							<p style="margin-top: 10px; font-weight: 600;">\${deck.mainCard.name}</p>
+						</div>
+					\`;
+				}
+
+				// Card list
+				if (deck.cardList) {
+					const renderCardSection = (cards, title) => {
+						if (!cards || cards.length === 0) return '';
+						let section = \`<h4 style="margin-top: 25px; margin-bottom: 15px; color: #667eea;">\${title} (\${cards.reduce((sum, c) => sum + c.count, 0)})</h4>\`;
+						section += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px;">';
+						cards.forEach(card => {
+							section += \`
+								<div style="text-align: center;">
+									<img src="\${card.image}" alt="\${card.name}" style="width: 100%; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22140%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22140%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22 font-size=%2212%22%3E\${card.set}%3C/text%3E%3C/svg%3E'">
+									<div style="font-size: 11px; margin-top: 5px; font-weight: 600;">\${card.count}x</div>
+									<div style="font-size: 10px; color: #666;">\${card.name}</div>
+								</div>
+							\`;
+						});
+						section += '</div>';
+						return section;
+					};
+
+					html += renderCardSection(deck.cardList.pokemon, 'Pokémon');
+					html += renderCardSection(deck.cardList.trainer, 'Trainer');
+					html += renderCardSection(deck.cardList.energy, 'Energy');
+				}
+
+				content.innerHTML = html;
+
+			} catch (error) {
+				console.error('showDeckDetails error:', error);
+				content.innerHTML = \`<div class="error">Failed to load deck details: \${error.message}</div>\`;
+			}
+		}
+
+		// Close deck details modal
+		function closeDeckDetailsModal() {
+			document.getElementById('deckDetailsModal').classList.remove('active');
+		}
+
+		// Make showDeckDetails available globally
+		window.showDeckDetails = showDeckDetails;
 
 		// Select result
 		function selectResult(result) {
