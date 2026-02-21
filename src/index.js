@@ -792,19 +792,24 @@ function generateDemoHTML() {
 					card.onclick = () => showDeckDetails(deck.name, days, format);
 
 					const setColor = deck.setColor || '#808080';
+					const deckUrl = deck.deckUrl || '#';
+					const deckName = deck.name || 'Unknown';
+					const deckCount = deck.count || 0;
+					const setCode = deck.setCode || 'Unknown';
+
 					let imageHtml = '';
 					if (deck.image) {
-						imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.style.display=\'none\'">';
+						imageHtml = '<img src="' + deck.image + '" alt="' + deckName + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.style.display=\'none\'">';
 					} else {
-						imageHtml = '<span style="color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;">' + (deck.setCode || 'Unknown') + '</span>';
+						imageHtml = '<span style="color: white; font-size: 12px; font-weight: bold; text-transform: uppercase;">' + setCode + '</span>';
 					}
 
 					card.innerHTML = '<div class="deck-image" style="background-color: ' + setColor + '; display: flex; align-items: center; justify-content: center; position: relative;">' +
 						imageHtml +
 						'</div>' +
-						'<div class="deck-name">' + deck.name + '</div>' +
-						'<div class="deck-count">' + deck.count + ' appearances</div>' +
-						'<a href="' + deck.deckUrl + '" target="_blank" style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: 600;">Ver Deck</a>';
+						'<div class="deck-name">' + deckName + '</div>' +
+						'<div class="deck-count">' + deckCount + ' appearances</div>' +
+						'<a href="' + deckUrl + '" target="_blank" style="display: inline-block; margin-top: 8px; padding: 4px 8px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 11px; font-weight: 600;">Ver Deck</a>';
 
 					grid.appendChild(card);
 				});
@@ -878,19 +883,28 @@ function generateDemoHTML() {
 				const data = await res.json();
 				const deck = data.deck;
 
-				const setColor = deck.setColor || '#808080';
-				let imageHtml = '';
-				if (deck.image) {
-					imageHtml = '<img src="' + deck.image + '" alt="' + deck.name + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.style.display=\'none\'">';
-				} else {
-					imageHtml = '<span style="color: white; font-size: 18px; font-weight: bold; text-transform: uppercase;">' + (deck.setCode || 'Unknown') + '</span>';
+				if (!deck || !deck.name) {
+					throw new Error('Invalid deck data received');
 				}
 
-				let html = '<h2>' + deck.name + '</h2>' +
+				const setColor = deck.setColor || '#808080';
+				const deckName = deck.name || 'Unknown';
+				const deckAppearances = deck.appearances || 0;
+				const deckUrl = deck.deckUrl || '#';
+				const setCode = deck.setCode || 'Unknown';
+
+				let imageHtml = '';
+				if (deck.image) {
+					imageHtml = '<img src="' + deck.image + '" alt="' + deckName + '" style="height: 100%; width: auto; object-fit: contain;" onerror="this.style.display=\'none\'">';
+				} else {
+					imageHtml = '<span style="color: white; font-size: 18px; font-weight: bold; text-transform: uppercase;">' + setCode + '</span>';
+				}
+
+				let html = '<h2>' + deckName + '</h2>' +
 					'<p style="color: #666; margin-bottom: 10px;">' +
-					deck.appearances + ' appearances in last ' + days + ' days' +
+					deckAppearances + ' appearances in last ' + days + ' days' +
 					'</p>' +
-					'<a href="' + (deck.deckUrl || '#') + '" target="_blank" style="display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">📋 Ver Deck Completo en Limitless</a>' +
+					'<a href="' + deckUrl + '" target="_blank" style="display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">📋 Ver Deck Completo en Limitless</a>' +
 					'<div style="width: 200px; height: 200px; background-color: ' + setColor + '; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">' +
 					imageHtml +
 					'</div>';
@@ -898,13 +912,19 @@ function generateDemoHTML() {
 				if (deck.topPlacements && deck.topPlacements.length > 0) {
 					html += '<div class="card-section"><h3>Top Placements</h3><div class="card-list">';
 					deck.topPlacements.slice(0, 5).forEach(placement => {
+						const placing = placement.placing || '?';
+						const player = placement.player || 'Unknown';
+						const tournament = placement.tournament || 'Unknown';
+						const record = placement.record || {wins: 0, losses: 0, ties: 0};
+						const date = placement.date ? new Date(placement.date).toLocaleDateString() : 'Unknown';
+
 						html += \`
 							<div class="card-item">
 								<div>
-									<strong>#\${placement.placing}</strong> - \${placement.player} at \${placement.tournament}
+									<strong>#\${placing}</strong> - \${player} at \${tournament}
 									<div style="font-size: 12px; color: #666; margin-top: 4px;">
-										\${placement.record.wins}-\${placement.record.losses}-\${placement.record.ties}
-										• \${new Date(placement.date).toLocaleDateString()}
+										\${record.wins}-\${record.losses}-\${record.ties}
+										• \${date}
 									</div>
 								</div>
 							</div>
