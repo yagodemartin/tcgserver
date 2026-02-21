@@ -251,9 +251,9 @@ async function handleMetaTop(request, env, ctx) {
 			});
 		}
 
-		// MVP: Process only first 15 tournaments to avoid rate limiting
+		// MVP: Process only first 5 tournaments to avoid rate limiting and be faster
 		// In production, this would be better with pagination or background jobs
-		const tournamentsToProcess = tournaments.slice(0, 15);
+		const tournamentsToProcess = tournaments.slice(0, 5);
 		console.log(`Processing ${tournamentsToProcess.length} tournaments (rate limit protection)`);
 
 		// Fetch standings for each tournament with delays
@@ -371,7 +371,7 @@ async function fetchDeckDetails(deckName, days = 7, format = 'standard') {
 		mainCard: null,
 	};
 
-	const tournamentsToProcess = tournaments.slice(0, 15);
+	const tournamentsToProcess = tournaments.slice(0, 5);
 
 	for (let i = 0; i < tournamentsToProcess.length; i++) {
 		const tournament = tournamentsToProcess[i];
