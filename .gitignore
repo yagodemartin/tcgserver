@@ -1,11 +1,16 @@
+# Wrangler
+.wrangler/
+
+# Dependencies
 node_modules/
+
+# Environment
 .env
-.env.local
-.env.*.local
+.dev.vars
+
+# Temp files
+*.bat
+server.js
+
+# Build
 dist/
-build/
-*.log
-.DS_Store
-.idea/
-.vscode/
-wrangler.toml.local
